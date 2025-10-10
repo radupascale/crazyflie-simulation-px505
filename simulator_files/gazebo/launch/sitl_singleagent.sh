@@ -11,7 +11,7 @@ function spawn_model() {
 	Y=$4 # spawn y position
 	X=${X:=$X}
 	Y=${Y:=$Y}
-	SUPPORTED_MODELS=("crazyflie", "crazyflie_thrust_upgrade")
+	SUPPORTED_MODELS=("crazyflie", "crazyflie_thrust_upgrade", "x500")
 	if [[ " ${SUPPORTED_MODELS[*]} " != *"$MODEL"* ]];
 	then
 		echo "ERROR: Currently only vehicle model $MODEL is not supported!"
@@ -68,7 +68,7 @@ done
 world=${WORLD:=crazysim_default}
 x_cord=${X_CORD:=0}
 y_cord=${Y_CORD:=0}
-vehicle_model=${VEHICLE_MODEL:="crazyflie"}
+vehicle_model=${VEHICLE_MODEL:=$MODEL}
 export CF2_SIM_MODEL=gz_${vehicle_model}
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
