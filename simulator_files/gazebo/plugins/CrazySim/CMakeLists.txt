@@ -8,7 +8,7 @@ find_package(gz-plugin REQUIRED COMPONENTS register NAMES gz-plugin2)
 set(GZ_PLUGIN_VER ${gz-plugin_VERSION_MAJOR})
 
 set(GZ_SIM_FOUND FALSE)
-foreach(ver "" 10 9 8 7) # replace with future gz-sim versions
+foreach(ver 8 7) # replace with future gz-sim versions
   if(NOT GZ_SIM_FOUND)
     find_package(gz-sim NAMES gz-sim${ver})
     if(gz-sim_FOUND)
@@ -22,11 +22,7 @@ if(NOT GZ_SIM_FOUND)
   message(FATAL_ERROR "gz-sim not found")
 endif()
 
-if(GZ_SIM_VER EQUAL 10)
-  message("Found Gazebo 10: Jetty")
-  find_package(gz-transport REQUIRED NAMES gz-transport)
-  find_package(gz-msgs REQUIRED NAMES gz-msgs)
-elseif(GZ_SIM_VER EQUAL 8)
+if(GZ_SIM_VER EQUAL 8)
   message("Found Gazebo 8: Harmonic")
   find_package(gz-transport REQUIRED NAMES gz-transport13)
   find_package(gz-msgs REQUIRED NAMES gz-msgs10)
@@ -47,9 +43,9 @@ set_property(TARGET gz_crazysim_plugin PROPERTY CXX_STANDARD 17)
 target_link_libraries(gz_crazysim_plugin 
   PRIVATE
     gz-plugin${GZ_PLUGIN_VER}::gz-plugin${GZ_PLUGIN_VER}
-    gz-sim::gz-sim
-    gz-msgs::gz-msgs
-    gz-transport::core
+    gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
+    gz-msgs${GZ_MSGS_VER}::gz-msgs${GZ_MSGS_VER}
+    gz-transport${GZ_TRANSPORT_VER}::core
 )
 #==============================================================================================//
 
