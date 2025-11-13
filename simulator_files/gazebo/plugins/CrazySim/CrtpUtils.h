@@ -22,7 +22,10 @@
 
 #define GRAVITY_MAGNITUDE_CF (9.81) // we use the magnitude such that the sign/direction is explicit in calculations
 
-#define PWM2OMEGA(pwm) ((pwm) < (1000) ? (0) : ((0.04076521f*pwm) + 380.8359f))
+
+/* TODO PX: Change the macro to map DSHOT throttle range to rad/s */
+#define PWM2OMEGA(pwm) ((pwm) < (48) ? (0) : ((0.451845f * pwm) + 136.284931f))
+// #define PWM2OMEGA(pwm) ((pwm) < (1000) ? (0) : ((0.04076521f*pwm) + 380.8359f))
 // #define PWM2OMEGA(pwm) ((pwm) < (1000) ? (0) : ((0.03419482*pwm) + 353.424884428f))
 
 // Sensor type (first byte of crtp packet)
