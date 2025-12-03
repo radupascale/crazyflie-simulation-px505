@@ -33,6 +33,12 @@
 #include "blockingconcurrentqueue.h"
 #include "CrtpUtils.h"
 
+/* PX: Needed for X500 simulation */
+#define DSHOT_MIN_THROTTLE           48
+#define DSHOT_MAX_THROTTLE           2047
+#define DSHOT_RANGE                  (DSHOT_MAX_THROTTLE - DSHOT_MIN_THROTTLE)
+
+
 // Default topic names
 static const std::string kDefaultMotorVelocityReferencePubTopic = "/command/motor_speed";
 static const std::string kDefaultImuTopic = "/imu";
@@ -88,8 +94,8 @@ namespace crazyflie_interface
 			std::string cffirm_port;
 			std::string cflib_addr;
 			std::string cflib_port;
+            std::string reset_service_topic_;
 			// int cflib_latency_ms; // simulated radio delay
-
 
 			// bool enable_logging;
 			// bool enable_logging_imu;
@@ -105,6 +111,8 @@ namespace crazyflie_interface
 			void ImuCallback(const gz::msgs::IMU& imu_msg);
 			void BarometerCallback(const gz::msgs::FluidPressure& air_pressure_msg);
 			void OdomCallback(const gz::msgs::Odometry& odom_msg);
+            bool ResetPluginCallback(const gz::msgs::Boolean &_req, gz::msgs::Boolean &_rep);
+            void clearQueues(void);
 
 			// send and recv functions
 			bool sendCfFirmware(const uint8_t* data, uint32_t length);

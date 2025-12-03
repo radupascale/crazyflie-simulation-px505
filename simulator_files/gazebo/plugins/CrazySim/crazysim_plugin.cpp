@@ -195,6 +195,35 @@ void GzCrazyflieInterface::OdomCallback(const gz::msgs::Odometry& odom_msg) {
 	odom_queue.enqueue(msg);
 }
 
+void GzCrazyflieInterface::clearQueues() {
+    crtpPacket_t dump;
+    while(cflib_to_firmware_queue.try_dequeue(dump));
+    while(firmware_to_cflib_queue.try_dequeue(dump));
+    while(imu_queue.try_dequeue(dump));
+    while(barometer_queue.try_dequeue(dump));
+    while(odom_queue.try_dequeue(dump));
+}
+
+bool GzCrazyflieInterface::ResetPluginCallback(const gz::msgs::Boolean &_req, gz::msgs::Boolean &_rep) {
+    gzmsg << "Reset crazysim plugin" << std::endl;
+
+    socketInit = false; 
+    socketInit_cfLib = false;
+
+    clearQueues();
+
+    {
+        std::unique_lock<std::mutex> mlock(motors_mutex);
+        m_motor_command_.m1 = 0;
+        m_motor_command_.m2 = 0;
+        m_motor_command_.m3 = 0;
+        m_motor_command_.m4 = 0;
+    }
+
+    _rep.set_data(true);
+    return true;
+}
+
 bool GzCrazyflieInterface::sendCfFirmware(const uint8_t* data , uint32_t length) {	
 	int transferred = sendto(fd, data, length, 0, (struct sockaddr *) &(remaddr), addrlen);
 	if (transferred <= 0)
@@ -312,6 +341,10 @@ void GzCrazyflieInterface::initializeSubsAndPub() {
 	node_.Subscribe(cf_prefix + "_" + std::to_string(cf_id_) + imu_sub_topic_, &GzCrazyflieInterface::ImuCallback , this);
 	node_.Subscribe(cf_prefix + "_" + std::to_string(cf_id_) + barometer_sub_topic_, &GzCrazyflieInterface::BarometerCallback, this );
 	node_.Subscribe(cf_prefix + "_" + std::to_string(cf_id_) + odom_sub_topic_, &GzCrazyflieInterface::OdomCallback, this );
+
+    // Reset plugin command
+    reset_service_topic_ = cf_prefix + "_" + std::to_string(cf_id_) + "/reset_plugin";
+    node_.Advertise(reset_service_topic_, &GzCrazyflieInterface::ResetPluginCallback, this);
 	
 	motor_velocity_reference_pub_ = node_.Advertise<gz::msgs::Actuators>(cf_prefix + "_" + std::to_string(cf_id_) + motor_velocity_reference_pub_topic_);
 	
@@ -322,6 +355,28 @@ void GzCrazyflieInterface::initializeSubsAndPub() {
 void GzCrazyflieInterface::handleMotorsMessage(const uint8_t* data) {
 	crtpMotorsDataResponse* motorsData = (crtpMotorsDataResponse *) data;
 	{
+        motorsData->m1 = motorsData->m1 >> 5;
+        if (motorsData->m1 > 0 && motorsData->m1 < DSHOT_MIN_THROTTLE)
+        {
+            motorsData->m1 = DSHOT_MIN_THROTTLE;
+        }
+        motorsData->m2 = motorsData->m2 >> 5;
+        if (motorsData->m2 > 0 && motorsData->m2 < DSHOT_MIN_THROTTLE)
+        {
+            motorsData->m2 = DSHOT_MIN_THROTTLE;
+        }
+        motorsData->m3 = motorsData->m3 >> 5;
+        if (motorsData->m3 > 0 && motorsData->m3 < DSHOT_MIN_THROTTLE)
+        {
+            motorsData->m3 = DSHOT_MIN_THROTTLE;
+        }
+        motorsData->m4 = motorsData->m4 >> 5;
+        if (motorsData->m4 > 0 && motorsData->m4 < DSHOT_MIN_THROTTLE)
+        {
+            motorsData->m4 = DSHOT_MIN_THROTTLE;
+        }
+
+
 		std::unique_lock<std::mutex> mlock(motors_mutex);
 		m_motor_command_.m1 = PWM2OMEGA(motorsData->m1);
 		m_motor_command_.m2 = PWM2OMEGA(motorsData->m2);
